@@ -7,6 +7,7 @@ package client;
 import ocsf.client.*;
 import common.*;
 import java.io.*;
+import java.util.*;
 
 /**
  * This class overrides some of the methods defined in the abstract
@@ -17,7 +18,7 @@ import java.io.*;
  * @author Fran&ccedil;ois B&eacute;langer
  * @version July 2000
  */
-public class ChatClient extends AbstractClient
+public class ChatClient implements Observer
 {
   //Instance variables **********************************************
   
@@ -26,6 +27,7 @@ public class ChatClient extends AbstractClient
    * the display method in the client.
    */
   ChatIF clientUI; 
+  ObservableClient obsclient;
 
   
   //Constructors ****************************************************
@@ -41,9 +43,10 @@ public class ChatClient extends AbstractClient
   public ChatClient(String host, int port, ChatIF clientUI) 
     throws IOException 
   {
-    super(host, port); //Call the superclass constructor
+    obsclient = new ObservableClient(host, port); //Call the superclass constructor
+    obsclient.addObserver(this);
     this.clientUI = clientUI;
-    openConnection();
+    obsclient.openConnection();
   }
 
   
@@ -66,6 +69,7 @@ public class ChatClient extends AbstractClient
    */
   public void handleMessageFromClientUI(String message)
   {
+    /* 
     if (message.startsWith("#")) {
       switch(message) {
         case "#quit":
@@ -79,10 +83,10 @@ public class ChatClient extends AbstractClient
           break;
       }
     }
-    else {
+    else {*/
       try
       {
-        sendToServer(message);
+        obsclient.sendToServer(message);
       }
       catch(IOException e)
       {
@@ -91,7 +95,7 @@ public class ChatClient extends AbstractClient
         quit();
       }
     }
-  }
+  //}
   
   /**
    * This method terminates the client.
@@ -100,27 +104,28 @@ public class ChatClient extends AbstractClient
   {
     try
     {
-      closeConnection();
+      obsclient.closeConnection();
     }
     catch(IOException e) {}
     System.exit(0);
   }
 
-  @Override
   public void connectionEstablished() {
     clientUI.display("Connection has been established");
   }
 
-  @Override
   public void connectionException(Exception exception) {
     clientUI.display("Connection with the server died brutally");
     
   }
 
-  @Override
   public void connectionClosed() {
     clientUI.display("Connection closed");
     System.exit(0);
+  }
+
+  public void update(Observable o, Object arg) {
+    
   }
 }
 //End of ChatClient class
